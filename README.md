@@ -2,7 +2,7 @@
 
 使用 selenium 创建无头浏览器，通过模拟操作登录~~或通过登录凭证登录~~
 
-支持通过[青龙面板]([Qinglong](https://qinglong.online/))或~~docker部署（开发中）~~
+支持通过[青龙面板](https://qinglong.online)或~~docker部署（开发中）~~
 
 > 注意：需要科学上网
 
@@ -16,11 +16,9 @@
 
 ### 1.1 下载脚本
 
-下载mt_autologin.py
+下载mt_autologin文件夹
 
-新建mt_autologin文件夹
-
-将mt_autologin.py上传至mt_autologin
+将mt_autologin文件夹上传至青龙面板
 
 ### 1.2 修改镜像源（可选）
 
@@ -30,17 +28,17 @@ Linux软件包镜像源：https://mirrors.tuna.tsinghua.edu.cn
 
 ### 1.3 安装依赖
 
-安装python依赖: selenium, pyotp
+安装python依赖: selenium, pyotp, requests
 
 安装linux依赖: chromium, chromium-chromedriver
 
 ### 1.4 设置环境变量
 
-USERNAME = your_username
+MT_USERNAME = your_mt_username
 
-PASSWORD = your_password
+MT_PASSWORD = your_mt_password
 
-SECRET_KEY = your_secret_key
+MT_SECRET_KEY = your_mt_secret_key
 
 DRIVER_PATH = your_driver_path
 

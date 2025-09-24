@@ -1,6 +1,6 @@
-.venv
-.idea
+.venv/
+.idea/
 *.log
 *.json
-*.exe
-tests
+tests/
+*.in
