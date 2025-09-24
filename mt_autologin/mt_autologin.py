@@ -2,22 +2,23 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.common import TimeoutException
 import pyotp
 import os
-# import json
+import json
 
 # 定义AutoLogin类
 class AutoLogin:
 
-    def __init__(self, driver_path: str, disable_headless: bool):
+    def __init__(self, driver_path: str, headless: bool = True):
 
         # 配置options
         browser_options = Options()
 
-        if not disable_headless:
+        if headless:
             browser_options.add_argument('--headless')
 
         browser_options.add_argument('--no-sandbox')
@@ -43,38 +44,18 @@ class AutoLogin:
             return False
 
     # 等待可点击元素
-    def wait_clickable_elements(self, timeout: int, element: tuple[str,str]):
+    def wait_clickable_elements(self, timeout: int, element: tuple[str,str]) -> WebElement | bool:
         try:
             clickable_elements = WebDriverWait(self.browser_driver, timeout).until(
                 expected_conditions.element_to_be_clickable(element)
             )
-            return clickable_elements
 
         except TimeoutException:
             # print('未找到可点击元素')
             return False
 
-    # 获取localstorage
-    # def get_local_storage(self):
-    #
-    #     # 初始化字典
-    #     local_storage = {}
-    #
-    #     # 获取localstorage中的值
-    #     local_storage_keys = ('auth', 'persist:user')
-    #     for key in local_storage_keys:
-    #         value = self.browser_driver.execute_script(f"return localStorage.getItem('{key}');")
-    #
-    #         # 解析json
-    #         try:
-    #             local_storage[key] = json.loads(value)
-    #
-    #         except json.JSONDecodeError:
-    #             local_storage[key] = value
-    #
-    #     # 保存json文件
-    #     with open('localstorage.json', 'w', encoding='utf-8') as f:
-    #         json.dump(local_storage, f, ensure_ascii=False, indent=4)
+        else:
+            return clickable_elements
 
     # 登陆验证
     def check(self) -> bool:
@@ -85,10 +66,8 @@ class AutoLogin:
         try:
             # 确认通知
             confirm_element = self.wait_clickable_elements(10, (By.XPATH, "//span[text()='確認']"))
-            confirm_element.click()
-            return True
 
-        except Exception:
+        except TimeoutException:
             if check_condition_1 or check_condition_2:
                 print('未发现通知')
                 return True
@@ -96,8 +75,33 @@ class AutoLogin:
                 print('登陆超时')
                 return False
 
+        else:
+            confirm_element.click()
+            return True
+
+    # 获取jwt
+    def get_jwt(self, jwt_keys: str | tuple):
+
+        # 初始化字典
+        jwt = {}
+
+        # 获取localstorage中的值
+        for key in jwt_keys:
+            value = self.browser_driver.execute_script(f"return localStorage.getItem('{key}');")
+
+            # 解析json
+            try:
+                jwt[key] = json.loads(value)
+
+            except json.JSONDecodeError:
+                jwt[key] = value
+
+        # 保存json文件
+        with open('jwt.json', 'w', encoding='utf-8') as f:
+            json.dump(jwt, f, ensure_ascii=False, indent=4)
+
     # 模拟登录
-    def by_simulation(self, username: str, password: str, secret_key: str):
+    def by_selenium(self, username: str, password: str, secret_key: str):
 
         # 输入用户名
         username_element = self.wait_visible_elements(10, (By.ID, 'username'))
@@ -156,27 +160,20 @@ class AutoLogin:
     #     self.browser_driver.refresh()
 
     # 关闭浏览器
-    def quit(self, test: bool):
-        if test:
-            if input('输入q退出:') == 'q':
-                self.browser_driver.quit()
-        else:
+    def quit(self):
             self.browser_driver.quit()
 
 # 定义主函数
-def main(test: bool = False, disable_headless: bool = False):
+def main():
 
     # 获取环境变量
-    if test:
-        from tests.config import username, password, secret_key, driver_path
-    else:
-        username = os.getenv('USERNAME')
-        password = os.getenv('PASSWORD')
-        secret_key = os.getenv('SECRET_KEY')
-        driver_path = os.getenv('DRIVER_PATH')
+    username = os.getenv('MT_USERNAME')
+    password = os.getenv('MT_PASSWORD')
+    secret_key = os.getenv('MT_SECRET_KEY')
+    driver_path = os.getenv('DRIVER_PATH')
 
     # 初始化webdriver
-    login = AutoLogin(driver_path, disable_headless)
+    login = AutoLogin(driver_path = driver_path)
 
     # 访问网页
     login.browser_driver.get('https://ob.m-team.cc')
@@ -228,13 +225,13 @@ def main(test: bool = False, disable_headless: bool = False):
     #         login.quit_browser(test)
 
     # 登录
-    login.by_simulation(username, password, secret_key)
+    login.by_selenium(username, password, secret_key)
     if login.check():
         print('模拟登录成功')
-        login.quit(test)
+        login.quit()
     else:
         print('模拟登录失败')
-        login.quit(test)
+        login.quit()
 
 if __name__ == '__main__':
-    main(test = False, disable_headless = False)
+    main()
