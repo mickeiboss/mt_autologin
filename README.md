@@ -1,16 +1,12 @@
 # **mt_autologin**
 
-使用 selenium 创建无头浏览器，通过模拟操作登录~~或通过登录凭证登录~~
+使用 selenium 创建无头浏览器，通过模拟操作登录或通过复用用户数据登录
 
-支持通过[青龙面板](https://qinglong.online)或~~docker部署（开发中）~~
+支持通过[青龙面板](https://qinglong.online)部署
 
 > 注意：需要科学上网
 
-> 注意：仅建议将此脚本作为备用
-
-> 注意：通过脚本登陆时会产生登录通知
-
-> ~~注意：通过登录凭证登录时可能会产生“疑似登录凭证泄露”的通知~~
+> 注意：建议仅将此脚本作为备用
 
 ## 1. 通过青龙面板部署
 
@@ -40,8 +36,6 @@ MT_PASSWORD = your_mt_password
 
 MT_SECRET_KEY = your_mt_secret_key
 
-DRIVER_PATH = your_driver_path
+CHROME_DRIVER_PATH = your_driver_path
 
 ### 1.5 设置定时任务
-
-## ~~2. 通过docker部署（开发中）~~

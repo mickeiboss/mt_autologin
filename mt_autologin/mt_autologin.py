@@ -2,7 +2,6 @@ import os
 import sys
 
 import pyotp
-from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -18,9 +17,6 @@ class AutoLogin:
 
     def __init__(self, driver_path: str, user_data_dir: str, headless: bool = True):
 
-        # 生成useragent
-        ua = UserAgent(browsers = 'Chrome')
-
         # 配置options
         options = Options()
 
@@ -30,22 +26,13 @@ class AutoLogin:
         options.add_argument('--no-sandbox') # 禁用沙盒
         options.add_argument('--disable-gpu') # 禁用gpu
         options.add_argument('--disable-dev-shm-usage') # 禁用共享内存
-        options.add_argument(f'--user-agent={ua.random}') # 设置useragent
         options.add_argument(f'--user-data-dir={user_data_dir}') # 设置用户数据目录
-        options.add_argument('--disable-blink-features=AutomationControlled') # 隐藏警告
-        options.add_experimental_option('excludeSwitches', ['enable-automation']) # 移除enable-automation
-        options.add_experimental_option('useAutomationExtension', False) # 禁用selenium扩展
-        options.add_experimental_option('prefs', {'profile.password_manager_enabled': False}) # 禁用密码管理器
 
         # 创建service
         service = Service(executable_path = driver_path)
 
         # 初始化webdriver
         self.driver = webdriver.Chrome(service = service, options = options)
-        self.driver.execute_cdp_cmd(
-            'Page.addScriptToEvaluateOnNewDocument',
-            {'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'}
-        )
 
     # 等待可见元素
     def wait_visible_elements(self, timeout: int, element: tuple[str,str]) -> WebElement | TimeoutException:
@@ -75,16 +62,15 @@ class AutoLogin:
         else:
             return clickable_elements
 
-    # 登陆验证并确认通知
+    # 登录验证并确认通知
     def check(self) -> bool:
 
-        # 登陆验证
+        # 登录验证
         try:
             self.wait_visible_elements(10, (By.XPATH, '//span[text()="歡迎回來"]'))
             self.wait_visible_elements(10, (By.XPATH, '//span[text()="退出"]'))
 
         except TimeoutException:
-            print('登录超时')
             return False
 
         else:
@@ -101,10 +87,10 @@ class AutoLogin:
             finally:
                 return True
 
-    # 通过模拟操作登录
+    # 模拟登录
     def by_simulation(self, username: str, password: str, secret_key: str):
 
-    # 输入用户名和密码
+        # 输入用户名和密码
         try:
             username_input = self.wait_clickable_elements(10, (By.ID, 'username'))
             password_input = self.wait_clickable_elements(10, (By.ID, 'password'))
@@ -167,11 +153,11 @@ def main():
     # 在脚本同级目录下创建一个名为 "chrome_profile" 的目录
     user_data_dir = os.path.join(script_dir, "user_data")
 
-    # 创建目录（如果不存在），并确保权限
+    # 创建目录（如果不存在）
     os.makedirs(user_data_dir, exist_ok=True)
 
     # 初始化webdriver
-    driver_path = os.getenv('DRIVER_PATH')
+    driver_path = os.getenv('CHROME_DRIVER_PATH')
     login = AutoLogin(driver_path = driver_path, user_data_dir = user_data_dir)
 
     # 访问网页
@@ -182,17 +168,21 @@ def main():
 
     # 登录
     if login.check():
-        pass
+        print('登录成功')
 
     else:
         username = os.getenv('MT_USERNAME')
         password = os.getenv('MT_PASSWORD')
         secret_key = os.getenv('MT_SECRET_KEY')
         login.by_simulation(username, password, secret_key)
-        login.check()
+
+        if login.check():
+            print('登录成功')
+
+        else:
+            print('登录失败')
 
     login.quit()
-
 
 if __name__ == '__main__':
     main()
