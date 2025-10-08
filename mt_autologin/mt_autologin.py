@@ -3,7 +3,7 @@ import sys
 
 import pyotp
 from selenium import webdriver
-from selenium.common import TimeoutException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -35,29 +35,29 @@ class AutoLogin:
         self.driver = webdriver.Chrome(service = service, options = options)
 
     # 等待可见元素
-    def wait_visible_elements(self, timeout: int, element: tuple[str,str]) -> WebElement | TimeoutException:
+    def wait_visible_elements(self, timeout: int, element: tuple[str,str]) -> WebElement:
 
         try:
             visible_elements = WebDriverWait(driver = self.driver, timeout = timeout).until(
                 method = expected_conditions.visibility_of_element_located(locator = element)
             )
 
-        except TimeoutException:
-            raise TimeoutException
+        except TimeoutException as e:
+            raise e
 
         else:
             return visible_elements
 
     # 等待可点击元素
-    def wait_clickable_elements(self, timeout: int, element: tuple[str,str]) -> WebElement | TimeoutException:
+    def wait_clickable_elements(self, timeout: int, element: tuple[str,str]) -> WebElement:
 
         try:
             clickable_elements = WebDriverWait(driver = self.driver, timeout = timeout).until(
                 method = expected_conditions.element_to_be_clickable(mark = element)
             )
 
-        except TimeoutException:
-            raise TimeoutException
+        except TimeoutException as e:
+            raise e
 
         else:
             return clickable_elements
@@ -147,17 +147,17 @@ class AutoLogin:
 def main():
 
     # 检查并生成用户数据目录
-    # 获取当前脚本所在目录（绝对路径）
     script_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-    # 在脚本同级目录下创建一个名为 "chrome_profile" 的目录
-    user_data_dir = os.path.join(script_dir, "user_data")
-
-    # 创建目录（如果不存在）
+    user_data_dir = os.path.join(script_dir, 'user_data')
     os.makedirs(user_data_dir, exist_ok=True)
 
     # 初始化webdriver
     driver_path = os.getenv('CHROME_DRIVER_PATH')
+
+    if driver_path is None:
+        print('请设置环境变量 CHROME_DRIVER_PATH')
+        sys.exit()
+    
     login = AutoLogin(driver_path = driver_path, user_data_dir = user_data_dir)
 
     # 访问网页
@@ -174,6 +174,11 @@ def main():
         username = os.getenv('MT_USERNAME')
         password = os.getenv('MT_PASSWORD')
         secret_key = os.getenv('MT_SECRET_KEY')
+
+        if username is None or password is None or secret_key is None:
+            print('请设置环境变量 MT_USERNAME、MT_PASSWORD 和 MT_SECRET_KEY')
+            sys.exit()
+
         login.by_simulation(username, password, secret_key)
 
         if login.check():
