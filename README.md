@@ -36,6 +36,6 @@ MT_PASSWORD = your_mt_password
 
 MT_SECRET_KEY = your_mt_secret_key
 
-CHROME_DRIVER_PATH = your_driver_path
+CHROME_DRIVER_PATH = your_driver_path(默认为/usr/lib/chromium/chromedriver)
 
 ### 1.5 设置定时任务
